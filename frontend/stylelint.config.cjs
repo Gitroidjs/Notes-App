@@ -1,5 +1,5 @@
-// ES Module stylelint configuration for Vite + React + Tailwind
-export default {
+// CommonJS stylelint configuration for Vite + React + Tailwind
+module.exports = {
   extends: ["stylelint-config-tailwindcss"],
   customSyntax: "postcss-syntax",
   rules: {
