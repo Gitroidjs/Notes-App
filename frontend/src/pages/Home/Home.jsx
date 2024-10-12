@@ -1,9 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Navbar from "../../components/Navbar";
 import NoteCard from "../../components/Cards/NoteCard";
 import { MdAdd } from "react-icons/md";
 import AddEditNotes from "./AddEditNotes";
 import Modal from "react-modal";
+import { useNavigate } from "react-router-dom";
+import axiosInstance from "../../utils/AxiosInstance";
 
 const Home = () => {
   const [openAddEditModal, setOpenEditModal] = useState({
@@ -12,22 +14,63 @@ const Home = () => {
     data: null,
   });
 
+  const [userInfo, setUserInfo] = useState(null);
+  const [allNotes, setAllNotes] = useState([]);
+
+  const navigate = useNavigate();
+
+  const getUserInfo = async () => {
+    try {
+      const respose = await axiosInstance.get("/get-user");
+      if (respose.data && respose.data.user) {
+        setUserInfo(respose.data.user);
+      }
+    } catch (error) {
+      if (error.respose.status === 401) {
+        localStorage.clear();
+        navigate("/login");
+      }
+    }
+  };
+
+  const getAllNotes = async () => {
+    try {
+      const respose = await axiosInstance.get("/get-all-notes");
+
+      if (respose.data && respose.data.notes) {
+        setAllNotes(respose.data.notes);
+      }
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  useEffect(() => {
+    getAllNotes();
+    getUserInfo();
+
+    return () => {};
+  }, []);
+
   return (
     <>
-      <Navbar />
+      <Navbar userInfo={userInfo} />
 
       <div className="container mx-auto">
         <div className="grid grid-cols-3 gap-4 mt-8">
-          <NoteCard
-            title="Hi"
-            date="10/10/10"
-            content="hi"
-            tags="meeting"
-            isPinned={true}
-            onEdit={() => {}}
-            onDelete={() => {}}
-            onPinNote={() => {}}
-          />
+          {allNotes.map((item, index) => (
+            <NoteCard
+            key={item._id}
+              title={item.title}
+              date="10/10/10"
+              content={item.content}
+              tags={item.tags}
+              isPinned={item.isPinned}
+              onEdit={() => {}}
+              onDelete={() => {}}
+              onPinNote={() => {}}
+            />
+          ))}
         </div>
       </div>
 
@@ -48,8 +91,8 @@ const Home = () => {
         className="w-[40%] max-h-3/4 bg-white rounded-md mx-auto mt-14 p-5 overflow-hidden"
       >
         <AddEditNotes
-        type={openAddEditModal.type}
-        noteData={openAddEditModal.data}
+          type={openAddEditModal.type}
+          noteData={openAddEditModal.data}
           onClose={() => {
             setOpenEditModal({ isShown: false, type: "add", data: null });
           }}
